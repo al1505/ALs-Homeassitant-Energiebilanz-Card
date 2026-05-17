@@ -83,8 +83,15 @@ function startWatcher(baseDir) {
           console.log(`  ⚠  ${validation.warnings.length} Warnung(en)`);
         }
 
-        const outName = safeMove(filePath, outputDir, filename);
-        console.log(`  → Ausgabe: 0.8/${outName}`);
+        const outFilename = filename.replace(/\.xml$/i, '.08.xml');
+        let outPath = path.join(outputDir, outFilename);
+        if (fs.existsSync(outPath)) {
+          const ext  = path.extname(outFilename);
+          const base = path.basename(outFilename, ext);
+          outPath = path.join(outputDir, `${base}_${Date.now()}${ext}`);
+        }
+        fs.writeFileSync(outPath, xmlOut, 'utf-8');
+        console.log(`  → Ausgabe: 0.8/${path.basename(outPath)}`);
 
       } else {
         result.status = 'fehler';
