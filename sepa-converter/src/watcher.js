@@ -6,6 +6,7 @@ const chokidar = require('chokidar');
 const { convertPain008 } = require('./converter');
 const { validatePain008 } = require('./validator');
 const { generateReport }  = require('./reporter');
+const { generateDoku }    = require('./doku');
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -29,6 +30,7 @@ function startWatcher(baseDir) {
   const outputDir  = path.join(baseDir, '0.8');
   const errorDir   = path.join(baseDir, 'fehler');
   const reportFile = path.join(baseDir, 'bericht.html');
+  const dokuFile   = path.join(baseDir, 'dokumentation.html');
 
   ensureDir(inputDir);
   ensureDir(archivDir);
@@ -38,7 +40,9 @@ function startWatcher(baseDir) {
   const results = [];
 
   function saveReport() {
-    fs.writeFileSync(reportFile, generateReport(results, new Date().toISOString()), 'utf-8');
+    const ts = new Date().toISOString();
+    fs.writeFileSync(reportFile, generateReport(results, ts), 'utf-8');
+    fs.writeFileSync(dokuFile,   generateDoku(results, ts),   'utf-8');
   }
 
   function processFile(filePath) {
