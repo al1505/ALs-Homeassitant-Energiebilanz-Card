@@ -7,7 +7,9 @@ const { convertPain008 }    = require('./converter');
 const { validatePain008 }   = require('./validator');
 const { buildComparison }   = require('./comparator');
 const { generateDashboard } = require('./dashboard');
-const { generateUserGuide } = require('./userguide');
+
+const INPUT_DIR  = 'Eingabe-pain.008.001.01';
+const OUTPUT_DIR = 'Konvertiert-pain.008.001.08';
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -26,12 +28,11 @@ function safeMove(src, destDir, filename) {
 }
 
 function startWatcher(baseDir) {
-  const inputDir     = path.join(baseDir, '0.1');
-  const archivDir    = path.join(baseDir, '0.1', 'archiv');
-  const outputDir    = path.join(baseDir, '0.8');
+  const inputDir     = path.join(baseDir, INPUT_DIR);
+  const archivDir    = path.join(baseDir, INPUT_DIR, 'archiv');
+  const outputDir    = path.join(baseDir, OUTPUT_DIR);
   const errorDir     = path.join(baseDir, 'fehler');
   const dashFile     = path.join(baseDir, 'dashboard.html');
-  const guideFile    = path.join(baseDir, 'userguide.html');
 
   ensureDir(inputDir);
   ensureDir(archivDir);
@@ -42,8 +43,7 @@ function startWatcher(baseDir) {
 
   function saveDashboard() {
     const ts = new Date().toISOString();
-    fs.writeFileSync(dashFile,  generateDashboard(results, ts), 'utf-8');
-    fs.writeFileSync(guideFile, generateUserGuide(ts),          'utf-8');
+    fs.writeFileSync(dashFile, generateDashboard(results, ts), 'utf-8');
   }
 
   function processFile(filePath) {
