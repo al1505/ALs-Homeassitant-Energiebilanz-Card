@@ -1,0 +1,14 @@
+{
+  "name": "sepa-pain008-converter",
+  "version": "1.0.0",
+  "description": "Konvertiert SEPA Direct Debit XML von pain.008.001.01 (österreichisches STUZZA-Format) nach pain.008.001.08",
+  "main": "src/converter.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "fast-xml-parser": "^4.3.6",
+    "xmlbuilder2": "^3.1.1"
+  }
+}
