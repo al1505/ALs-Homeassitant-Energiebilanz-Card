@@ -127,7 +127,7 @@ function buildDrctDbtTxInf(parent, tx) {
   if (drctDbtTx) {
     const drctEle = ele.ele(TARGET_NS, 'DrctDbtTx');
     buildMndtRltdInf(drctEle, drctDbtTx['MndtRltdInf']);
-    buildCdtrSchmeId(drctEle, drctDbtTx['CdtrSchmeId']);
+    // CdtrSchmeId wird auf PmtInf-Ebene geschrieben, nicht hier
   }
 
   const dbtrAgt = tx['DbtrAgt'];
@@ -174,7 +174,15 @@ function buildPmtInf(parent, pmtInf) {
     buildFinInstnId(agtEle, cdtrAgt['FinInstnId']);
   }
 
-  for (const tx of toArr(pmtInf['DrctDbtTxInf'])) {
+  // CdtrSchmeId gehört laut pain.008.001.08 XSD auf PmtInf-Ebene (nach CdtrAgt),
+  // nicht in jede DrctDbtTx. Wir nehmen sie aus der ersten Transaktion.
+  const txList = toArr(pmtInf['DrctDbtTxInf']);
+  const firstCdtrSchmeId = txList.length > 0
+    ? txList[0]?.['DrctDbtTx']?.['CdtrSchmeId']
+    : undefined;
+  buildCdtrSchmeId(ele, firstCdtrSchmeId);
+
+  for (const tx of txList) {
     buildDrctDbtTxInf(ele, tx);
   }
 }
