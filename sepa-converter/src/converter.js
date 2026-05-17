@@ -31,10 +31,23 @@ function buildFinInstnId(parent, finInstn) {
   parent.ele(TARGET_NS, 'FinInstnId').ele(TARGET_NS, 'BICFI').txt(bic);
 }
 
+// Structured field order as per ISO 20022 PostalAddress24 XSD
+const PSTL_ADR_FIELDS = [
+  'Dept','SubDept','StrtNm','BldgNb','BldgNm',
+  'Flr','PstBx','Room','PstCd','TwnNm',
+  'TwnLctnNm','DstrctNm','CtrySubDvsn',
+];
+
 function buildPstlAdr(parent, pstlAdr) {
   if (!pstlAdr) return;
   const adrEle = parent.ele(TARGET_NS, 'PstlAdr');
+  // Structured fields first (XSD-konformer Reihenfolge)
+  for (const field of PSTL_ADR_FIELDS) {
+    if (pstlAdr[field]) adrEle.ele(TARGET_NS, field).txt(s(pstlAdr[field]));
+  }
+  // Ctry nach strukturierten Feldern, vor AdrLine (XSD-Reihenfolge)
   if (pstlAdr['Ctry']) adrEle.ele(TARGET_NS, 'Ctry').txt(s(pstlAdr['Ctry']));
+  // Unstrukturierte Adresszeilen (alternativ zu strukturierten Feldern)
   for (const line of toArr(pstlAdr['AdrLine'])) {
     adrEle.ele(TARGET_NS, 'AdrLine').txt(s(line));
   }
