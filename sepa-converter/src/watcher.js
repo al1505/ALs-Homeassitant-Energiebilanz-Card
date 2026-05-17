@@ -31,7 +31,7 @@ function startWatcher(baseDir) {
   const inputDir     = path.join(baseDir, INPUT_DIR);
   const archivDir    = path.join(baseDir, INPUT_DIR, 'archiv');
   const outputDir    = path.join(baseDir, OUTPUT_DIR);
-  const errorDir     = path.join(baseDir, 'fehler');
+  const errorDir     = path.join(baseDir, 'Fehler');
   const dashFile     = path.join(baseDir, 'dashboard.html');
 
   ensureDir(inputDir);
@@ -114,7 +114,7 @@ function startWatcher(baseDir) {
         fs.writeFileSync(path.join(errorDir, errXmlName), xmlOut, 'utf-8');
 
         const errName = safeMove(filePath, errorDir, filename);
-        console.log(`  → Fehlerhaft archiviert: fehler/${errName}`);
+        console.log(`  → Fehlerhaft archiviert: Fehler/${errName}`);
       }
 
     } catch (convErr) {
@@ -122,7 +122,7 @@ function startWatcher(baseDir) {
       console.log(`  ✗ Konvertierungsfehler: ${convErr.message}`);
       try {
         const errName = safeMove(filePath, errorDir, filename);
-        console.log(`  → In Fehlerordner verschoben: fehler/${errName}`);
+        console.log(`  → In Fehlerordner verschoben: Fehler/${errName}`);
       } catch (mvErr) {
         console.error(`  ⚠  Verschieben fehlgeschlagen: ${mvErr.message}`);
       }

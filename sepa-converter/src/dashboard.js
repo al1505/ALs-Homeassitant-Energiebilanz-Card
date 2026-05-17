@@ -499,7 +499,7 @@ function showTab(id, el) {
   }
   document.getElementById('tab-' + id).classList.add('active');
   activeTab = id;
-  localStorage.setItem('activeTab', id);
+  localStorage.setItem('activeTab_v2', id);
   if (id === 'vergl') initCmp();
   updateRfStatus();
 }
@@ -509,8 +509,9 @@ let rfTimer = null, rfSecs = 5, rfRemain = 5;
 
 function initRefresh() {
   // Defaults: ON, 5s — only override if user has explicitly saved a setting
-  const enabled = localStorage.getItem('rfEnabled') !== '0';
-  const secs    = parseInt(localStorage.getItem('rfSecs') || '5');
+  // Use _v2 keys to avoid collision with stale values from older versions
+  const enabled = localStorage.getItem('rfEnabled_v2') !== '0';
+  const secs    = parseInt(localStorage.getItem('rfSecs_v2') || '5');
   const sel     = document.getElementById('rfSel');
   if (sel) { sel.value = secs; if (!sel.value) sel.value = '5'; }
   document.getElementById('rfToggle').checked = enabled;
@@ -518,13 +519,13 @@ function initRefresh() {
 }
 
 function onRfToggle(checked) {
-  localStorage.setItem('rfEnabled', checked ? '1' : '0');
+  localStorage.setItem('rfEnabled_v2', checked ? '1' : '0');
   checked ? startRefresh(parseInt(document.getElementById('rfSel').value)) : stopRefresh();
 }
 
 function onRfChange() {
   const secs = parseInt(document.getElementById('rfSel').value);
-  localStorage.setItem('rfSecs', secs);
+  localStorage.setItem('rfSecs_v2', secs);
   if (document.getElementById('rfToggle').checked) startRefresh(secs);
 }
 
@@ -704,7 +705,7 @@ initConv();
 initRefresh();
 
 // Restore last active tab (so reload doesn't jump back to Konvertierungen)
-const _saved = localStorage.getItem('activeTab') || 'konv';
+const _saved = localStorage.getItem('activeTab_v2') || 'konv';
 if (_saved !== 'konv') {
   const _idx  = TAB_IDS.indexOf(_saved);
   const _tabs = document.querySelectorAll('.tab');
