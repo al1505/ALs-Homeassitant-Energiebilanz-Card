@@ -226,11 +226,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       ${warnCount > 0 ? `<span class="stat stat-warn">⚠ ${warnCount}</span>` : ''}
     </div>
     <div class="rf-ctrl no-print">
-      <label><input type="checkbox" id="rfToggle" onchange="onRfToggle(this.checked)"> Auto-Refresh alle</label>
+      <label><input type="checkbox" id="rfToggle" checked onchange="onRfToggle(this.checked)"> Auto-Refresh alle</label>
       <select id="rfSel" onchange="onRfChange()">
-        <option value="5">5 Sek.</option>
+        <option value="5" selected>5 Sek.</option>
         <option value="10">10 Sek.</option>
-        <option value="30" selected>30 Sek.</option>
+        <option value="30">30 Sek.</option>
         <option value="60">1 Min.</option>
         <option value="120">2 Min.</option>
       </select>
@@ -484,24 +484,37 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 const DATA = ${dataJson};
 
 /* ── Tab switching ── */
+const TAB_IDS = ['konv','vergl','doku','guide'];
+let activeTab = 'konv';
+
 function showTab(id, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
+  if (el) {
+    el.classList.add('active');
+  } else {
+    const idx = TAB_IDS.indexOf(id);
+    const tabs = document.querySelectorAll('.tab');
+    if (idx >= 0 && tabs[idx]) tabs[idx].classList.add('active');
+  }
   document.getElementById('tab-' + id).classList.add('active');
+  activeTab = id;
+  localStorage.setItem('activeTab', id);
   if (id === 'vergl') initCmp();
+  updateRfStatus();
 }
 
 /* ── Auto-Refresh ── */
-let rfTimer = null, rfSecs = 0, rfRemain = 0;
+let rfTimer = null, rfSecs = 5, rfRemain = 5;
 
 function initRefresh() {
-  const enabled = localStorage.getItem('rfEnabled') === '1';
-  const secs    = parseInt(localStorage.getItem('rfSecs') || '30');
+  // Defaults: ON, 5s — only override if user has explicitly saved a setting
+  const enabled = localStorage.getItem('rfEnabled') !== '0';
+  const secs    = parseInt(localStorage.getItem('rfSecs') || '5');
   const sel     = document.getElementById('rfSel');
-  if (sel) { sel.value = secs; if (!sel.value) sel.value = '30'; }
+  if (sel) { sel.value = secs; if (!sel.value) sel.value = '5'; }
   document.getElementById('rfToggle').checked = enabled;
-  if (enabled) startRefresh(parseInt(sel ? sel.value : '30'));
+  if (enabled) startRefresh(secs);
 }
 
 function onRfToggle(checked) {
@@ -519,9 +532,16 @@ function startRefresh(secs) {
   stopRefresh();
   rfSecs = rfRemain = secs;
   rfTimer = setInterval(() => {
+    // Only count down and reload when on Konvertierungen tab
+    if (activeTab !== 'konv') {
+      rfRemain = rfSecs; // reset countdown silently
+      const el = document.getElementById('rfCountdown');
+      if (el) { el.textContent = '⏸'; el.title = 'Pausiert — nur auf Tab Konvertierungen aktiv'; }
+      return;
+    }
     rfRemain--;
     const el = document.getElementById('rfCountdown');
-    if (el) el.textContent = rfRemain > 0 ? rfRemain + 's' : '';
+    if (el) { el.textContent = rfRemain > 0 ? rfRemain + 's' : ''; el.title = ''; }
     if (rfRemain <= 0) location.reload();
   }, 1000);
 }
@@ -529,7 +549,17 @@ function startRefresh(secs) {
 function stopRefresh() {
   if (rfTimer) { clearInterval(rfTimer); rfTimer = null; }
   const el = document.getElementById('rfCountdown');
-  if (el) el.textContent = '';
+  if (el) { el.textContent = ''; el.title = ''; }
+}
+
+function updateRfStatus() {
+  const el = document.getElementById('rfCountdown');
+  if (!el || !document.getElementById('rfToggle').checked) return;
+  if (activeTab !== 'konv') {
+    el.textContent = '⏸'; el.title = 'Pausiert — nur auf Tab Konvertierungen aktiv';
+  } else {
+    el.title = '';
+  }
 }
 
 /* ── Konvertierungen Tab ── */
@@ -672,6 +702,14 @@ function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').repl
 
 initConv();
 initRefresh();
+
+// Restore last active tab (so reload doesn't jump back to Konvertierungen)
+const _saved = localStorage.getItem('activeTab') || 'konv';
+if (_saved !== 'konv') {
+  const _idx  = TAB_IDS.indexOf(_saved);
+  const _tabs = document.querySelectorAll('.tab');
+  if (_idx >= 0 && _tabs[_idx]) showTab(_saved, _tabs[_idx]);
+}
 </script>
 </body>
 </html>`;
