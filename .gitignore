@@ -5,6 +5,8 @@ sepa-converter/0.8/
 sepa-converter/fehler/
 sepa-converter/bericht.html
 sepa-converter/dokumentation.html
+sepa-converter/dashboard.html
+sepa-converter/userguide.html
 sepa-converter/dist/Bankconvertierer-linux
 sepa-converter/dist/Bankconvertierer.exe
 sepa-converter/dist/part*

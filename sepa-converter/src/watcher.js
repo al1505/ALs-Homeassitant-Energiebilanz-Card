@@ -1,12 +1,13 @@
 'use strict';
 
-const fs      = require('fs');
-const path    = require('path');
+const fs       = require('fs');
+const path     = require('path');
 const chokidar = require('chokidar');
-const { convertPain008 } = require('./converter');
-const { validatePain008 } = require('./validator');
-const { generateReport }  = require('./reporter');
-const { generateDoku }    = require('./doku');
+const { convertPain008 }    = require('./converter');
+const { validatePain008 }   = require('./validator');
+const { buildComparison }   = require('./comparator');
+const { generateDashboard } = require('./dashboard');
+const { generateUserGuide } = require('./userguide');
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -25,12 +26,12 @@ function safeMove(src, destDir, filename) {
 }
 
 function startWatcher(baseDir) {
-  const inputDir   = path.join(baseDir, '0.1');
-  const archivDir  = path.join(baseDir, '0.1', 'archiv');
-  const outputDir  = path.join(baseDir, '0.8');
-  const errorDir   = path.join(baseDir, 'fehler');
-  const reportFile = path.join(baseDir, 'bericht.html');
-  const dokuFile   = path.join(baseDir, 'dokumentation.html');
+  const inputDir     = path.join(baseDir, '0.1');
+  const archivDir    = path.join(baseDir, '0.1', 'archiv');
+  const outputDir    = path.join(baseDir, '0.8');
+  const errorDir     = path.join(baseDir, 'fehler');
+  const dashFile     = path.join(baseDir, 'dashboard.html');
+  const guideFile    = path.join(baseDir, 'userguide.html');
 
   ensureDir(inputDir);
   ensureDir(archivDir);
@@ -39,20 +40,17 @@ function startWatcher(baseDir) {
 
   const results = [];
 
-  function saveReport() {
+  function saveDashboard() {
     const ts = new Date().toISOString();
-    fs.writeFileSync(reportFile, generateReport(results, ts), 'utf-8');
-    fs.writeFileSync(dokuFile,   generateDoku(results, ts),   'utf-8');
+    fs.writeFileSync(dashFile,  generateDashboard(results, ts), 'utf-8');
+    fs.writeFileSync(guideFile, generateUserGuide(ts),          'utf-8');
   }
 
   function processFile(filePath) {
     const filename = path.basename(filePath);
 
-    // Only XML files directly in inputDir (skip subdirectories)
     if (!filename.toLowerCase().endsWith('.xml')) return;
     if (path.dirname(path.resolve(filePath)) !== path.resolve(inputDir)) return;
-
-    // Guard: file may already have been moved
     if (!fs.existsSync(filePath)) return;
 
     console.log(`\n📄 Verarbeite: ${filename}`);
@@ -63,6 +61,7 @@ function startWatcher(baseDir) {
       status:     'fehler',
       error:      null,
       validation: null,
+      comparison: [],
       timestamp:  new Date().toISOString(),
     };
 
@@ -72,6 +71,13 @@ function startWatcher(baseDir) {
 
       const validation = validatePain008(xmlOut);
       result.validation = validation;
+
+      // Build field comparison (safe — errors here must not abort the conversion)
+      try {
+        result.comparison = buildComparison(xmlIn, xmlOut);
+      } catch (cmpErr) {
+        console.log(`  ⚠  Feldvergleich übersprungen: ${cmpErr.message}`);
+      }
 
       if (validation.valid) {
         result.status = 'ok';
@@ -104,11 +110,9 @@ function startWatcher(baseDir) {
         validation.errors.slice(0, 5).forEach(e => console.log(`    ✗ ${e.field}: ${e.message}`));
         if (validation.errors.length > 5) console.log(`    … und ${validation.errors.length - 5} weitere`);
 
-        // Write converted (but invalid) file to error folder for review
         const errXmlName = filename.replace(/\.xml$/i, '_konvertiert_ungueltig.xml');
         fs.writeFileSync(path.join(errorDir, errXmlName), xmlOut, 'utf-8');
 
-        // Move original to error folder
         const errName = safeMove(filePath, errorDir, filename);
         console.log(`  → Fehlerhaft archiviert: fehler/${errName}`);
       }
@@ -124,7 +128,6 @@ function startWatcher(baseDir) {
       }
     }
 
-    // Archive source file (if still in inputDir after successful conversion)
     if (fs.existsSync(filePath)) {
       try {
         const archName = safeMove(filePath, archivDir, filename);
@@ -135,8 +138,8 @@ function startWatcher(baseDir) {
     }
 
     results.push(result);
-    saveReport();
-    console.log(`  📊 Bericht aktualisiert: bericht.html`);
+    saveDashboard();
+    console.log(`  📊 Dashboard aktualisiert: dashboard.html`);
   }
 
   console.log('\n🚀 SEPA Konvertierer gestartet');
@@ -144,16 +147,16 @@ function startWatcher(baseDir) {
   console.log(`   Ausgabe:  ${outputDir}`);
   console.log(`   Fehler:   ${errorDir}`);
   console.log(`   Archiv:   ${archivDir}`);
-  console.log(`   Bericht:  ${reportFile}`);
+  console.log(`   Dashboard: ${dashFile}`);
   console.log('\n👀 Überwachung aktiv... (Strg+C zum Beenden)\n');
 
-  saveReport(); // Leerer Initialbericht
+  saveDashboard();
 
   const watcher = chokidar.watch(inputDir, {
-    ignored:         /(^|[/\\])\../,  // versteckte Dateien ignorieren
-    persistent:      true,
-    ignoreInitial:   false,
-    depth:           0,               // keine Unterverzeichnisse
+    ignored:          /(^|[/\\])\../,
+    persistent:       true,
+    ignoreInitial:    false,
+    depth:            0,
     awaitWriteFinish: { stabilityThreshold: 1500, pollInterval: 100 },
   });
 
@@ -171,7 +174,7 @@ function startWatcher(baseDir) {
     console.log(`  ✓ Erfolgreich:    ${ok}`);
     console.log(`  ✗ Fehlgeschlagen: ${err}`);
     if (wns > 0) console.log(`  ⚠  Mit Warnungen: ${wns}`);
-    console.log(`\n  Bericht: ${reportFile}`);
+    console.log(`\n  Dashboard: ${dashFile}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     watcher.close();
     process.exit(0);
