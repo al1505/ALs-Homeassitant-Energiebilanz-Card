@@ -1,10 +1,23 @@
 {
-  "name": "sepa-pain008-converter",
+  "name": "bankconvertierer",
   "version": "1.0.0",
   "description": "Konvertiert SEPA Direct Debit XML von pain.008.001.01 (österreichisches STUZZA-Format) nach pain.008.001.08",
-  "main": "src/converter.js",
+  "main": "index.js",
+  "bin": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build:win":   "pkg index.js --targets node22-win-x64   --output dist/Bankconvertierer.exe",
+    "build:linux": "pkg index.js --targets node22-linux-x64 --output dist/Bankconvertierer-linux",
+    "build:all":   "npm run build:win && npm run build:linux"
+  },
+  "pkg": {
+    "scripts": [
+      "src/**/*.js"
+    ],
+    "assets": [],
+    "targets": [
+      "node22-win-x64"
+    ]
   },
   "dependencies": {
     "chokidar": "^3.5.3",
