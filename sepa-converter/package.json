@@ -11,9 +11,7 @@
     "build:all":   "npm run build:win && npm run build:linux"
   },
   "pkg": {
-    "scripts": [
-      "src/**/*.js"
-    ],
+    "scripts": [],
     "assets": [],
     "targets": [
       "node22-win-x64"
