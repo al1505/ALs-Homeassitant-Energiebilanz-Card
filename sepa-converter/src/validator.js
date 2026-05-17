@@ -145,6 +145,10 @@ function validatePain008(xmlString) {
     if (!cdtrBic)             err(`${pfx}/CdtrAgt/FinInstnId/BICFI`, 'Gläubiger-Bank-BICFI fehlt');
     else if (!BIC_RE.test(cdtrBic)) warn(`${pfx}/CdtrAgt/FinInstnId/BICFI`, `BIC-Format ungewöhnlich: "${cdtrBic}"`);
 
+    // CdtrSchmeId liegt in pain.008.001.08 auf PmtInf-Ebene (nicht in DrctDbtTx)
+    const credId = s(g(pmtInf, 'CdtrSchmeId', 'Id', 'PrvtId', 'Othr', 'Id'));
+    if (!credId) err(`${pfx}/CdtrSchmeId`, 'Gläubiger-ID (Creditor Identifier) fehlt');
+
     const pmtInfNbOfTxs = parseInt(s(pmtInf['NbOfTxs']), 10);
     const pmtInfCtrlSum = parseFloat(s(pmtInf['CtrlSum']));
 
@@ -179,9 +183,6 @@ function validatePain008(xmlString) {
       const dtOfSgntr = s(g(tx, 'DrctDbtTx', 'MndtRltdInf', 'DtOfSgntr'));
       if (!dtOfSgntr)               err(`${txPfx}/DrctDbtTx/MndtRltdInf/DtOfSgntr`, 'Mandatsdatum fehlt');
       else if (!DATE_RE.test(dtOfSgntr)) err(`${txPfx}/DrctDbtTx/MndtRltdInf/DtOfSgntr`, `Ungültiges Datum: "${dtOfSgntr}"`);
-
-      const credId = s(g(tx, 'DrctDbtTx', 'CdtrSchmeId', 'Id', 'PrvtId', 'Othr', 'Id'));
-      if (!credId) err(`${txPfx}/DrctDbtTx/CdtrSchmeId`, 'Gläubiger-ID (Creditor Identifier) fehlt');
 
       const dbtrBic = s(g(tx, 'DbtrAgt', 'FinInstnId', 'BICFI'));
       if (!dbtrBic)             err(`${txPfx}/DbtrAgt/FinInstnId/BICFI`, 'Schuldner-Bank-BICFI fehlt');
