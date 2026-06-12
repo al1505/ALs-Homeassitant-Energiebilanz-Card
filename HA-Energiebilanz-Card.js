@@ -1,4 +1,4 @@
-const EB_VERSION = "4.6";
+const EB_VERSION = "4.6.0";
 console.info(`%c ENERGIEBILANZ-CARD %c v${EB_VERSION} (Enterprise Edition) `, "color: white; background: #3182b7; font-weight: bold;", "color: #3182b7; background: white; font-weight: bold;");
 
 const TRANSLATIONS = {
