@@ -45,12 +45,12 @@ Alternativ:
 
 ### Methode 2: Manuell
 
-1. Lade die Datei `ha-energiebilanz-card.js` herunter.
-2. Erstelle in Home Assistant den Ordnerpfad `/config/www/community/ha-energiebilanz-card/` (falls noch nicht vorhanden).
+1. Lade die Datei `HA-Energiebilanz-Card.js` herunter.
+2. Erstelle in Home Assistant den Ordnerpfad `/config/www/community/ALs-Homeassitant-Energiebilanz-Card/` (falls noch nicht vorhanden).
 3. Lege die JS-Datei genau dort ab.
 4. Gehe in Home Assistant zu Einstellungen -> Dashboards -> Drei-Punkte-Menü oben rechts -> Ressourcen.
 5. Füge eine neue Ressource hinzu: 
-   * URL: `/local/community/ha-energiebilanz-card/ha-energiebilanz-card.js`
+   * URL: `/local/community/ALs-Homeassitant-Energiebilanz-Card/HA-Energiebilanz-Card.js`
    * Typ: `JavaScript-Modul`
 
 ## 🛠️ Konfiguration
